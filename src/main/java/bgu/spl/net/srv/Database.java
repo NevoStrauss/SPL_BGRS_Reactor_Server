@@ -3,9 +3,7 @@ package bgu.spl.net.srv;
 import bgu.spl.net.PassiveObjects.Course;
 import bgu.spl.net.PassiveObjects.User;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -22,7 +20,8 @@ import java.util.Scanner;
 public class Database {
     private static class singleton{private static final Database singleton = new Database();}
     private List<Course> coursesList;
-    private List<User> userList;
+    private List<User> registeredUserList;
+    private List<User> loggedInUserList;
 
     //to prevent user from creating new Database
     private Database() {
@@ -52,12 +51,69 @@ public class Database {
             e.printStackTrace();
             return false;
         }
-        userList = new LinkedList<>();
+        registeredUserList = new LinkedList<>();
+        loggedInUserList = new LinkedList<>();
         return true;
     }
 
-    public static void main(String[] args) {
-        Database d = getInstance();
-        System.out.println(d.coursesList);
+    private boolean isRegistered(User user){
+        for (User curr: registeredUserList) {
+            if (curr.equals(user))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean isLoggedIn(User user){
+        for (User curr: loggedInUserList) {
+            if (curr.getUsername().equals(user.getUsername()))
+                return true;
+        }
+        return false;
+    }
+
+    private boolean register(User user){
+            if (isRegistered(user))
+                return false;
+        registeredUserList.add(user);
+        return true;
+    }
+
+    public boolean adminReg(User user){
+        return register(user);
+    }
+
+    public boolean studentReg(User user){
+        return register(user);
+    }
+
+    private User getUserByName(String username){
+        for (User user:registeredUserList) {
+            if (user.getUsername().equals(username))
+                return user;
+        }
+        return null;
+    }
+
+    private boolean checkMatch(String username, String password){
+        for (User user:registeredUserList) {
+            if (user.getUsername().equals(username) && !user.getPassword().equals(password))
+                return false;
+        }
+        return true;
+    }
+
+    public boolean login(User user){
+        if (isLoggedIn(user) | !isRegistered(user))
+            return false;
+        loggedInUserList.add(user);
+        return true;
+    }
+
+    public boolean logout(User user){
+        if (!isLoggedIn(user) | !isRegistered(user))
+            return false;
+        loggedInUserList.remove(user);
+        return true;
     }
 }
