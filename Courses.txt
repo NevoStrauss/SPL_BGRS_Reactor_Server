@@ -1,0 +1,12 @@
+100|Logic|[]|5
+101|Computing|[]|5
+102|Algebra 1|[]|4
+103|Calculus 1|[]|4
+200|Combinatorics|[100,103]|5
+201|DataStructers|[101]|5
+202|Algebra 2|[103]|4
+203|Calculus 2|[103]|4
+300|SPL|[201]|5
+301|Algorithms|[200,203]|5
+302|Probability|[200,203]|4
+303|DigitSystems|[]|4
