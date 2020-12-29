@@ -1,9 +1,8 @@
 package bgu.spl.net.api;
 
 import bgu.spl.net.PassiveObjects.Message;
-import jdk.internal.net.http.common.Pair;
 
-import java.io.Serializable;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -55,8 +54,10 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message>{
         } else {
             if (nextByte == 0 | !(pattern.get(OP_CODE).second))
                 numOfZero--;
-            if (numOfZero == 0)
+            if (numOfZero == 0 && pattern.get(OP_CODE).second)
                 return new Message(OP_CODE, new String(bytes, 0, size, StandardCharsets.UTF_8).split(" "));
+            else if(numOfZero ==0)
+                return new Message(OP_CODE, bytesToShort(bytes));
             bytes[size] = nextByte;
             size++;
             if (size==bytes.length)
@@ -67,16 +68,45 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message>{
 
     @Override
     public byte[] encode(Message message) {
-        return new byte[0];
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        byte[] OP_CODE = shortToBytes(message.getOP_CODE());
+        byte[] COMMAND = shortToBytes(message.getAdditionalProps());
+        bytes.write(OP_CODE[0]);
+        bytes.write(OP_CODE[1]);
+        bytes.write(COMMAND[0]);
+        bytes.write(COMMAND[1]);
+        String[] optional = message.getProperties();
+        if (optional.length!=0) {
+            for (int i=0;i<optional.length;i++) {
+                byte[] encodedMessage = optional[i].getBytes(StandardCharsets.UTF_8);
+                for (int j=0; j < encodedMessage.length;j++){
+                    bytes.write(encodedMessage[j]);
+                }
+            }
+        }
+        return bytes.toByteArray();
     }
 
-    private Message popMessage() {
-        //notice that we explicitly requesting that the string will be decoded from UTF-8
-        //this is not actually required as it is the default encoding in java.
-        String str = new String(bytes, 0, size, StandardCharsets.UTF_8);
-        String[] props = str.split(" ");
-        Message result = new Message(OP_CODE, props);
-        size = 0;
+    private short bytesToShort(byte[] byteArray){
+        short result = (short) ((byteArray[0] & 0xff) << 8);
+        result += (short) (byteArray[1] & 0xff);
         return result;
+    }
+
+    private byte[] shortToBytes(short num){
+        byte[] bytesArray = new byte[2];
+        bytesArray[0] = (byte) ((num>>8)&0xFF);
+        bytesArray[1] = (byte) (num&0xFF);
+        return bytesArray;
+    }
+
+    private class Pair<K,V> {
+        private K first;
+        private V second;
+
+        public Pair(K _first, V _second){
+            first = _first;
+            second = _second;
+        }
     }
 }

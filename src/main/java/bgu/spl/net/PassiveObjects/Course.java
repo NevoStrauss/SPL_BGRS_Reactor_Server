@@ -1,10 +1,11 @@
 package bgu.spl.net.PassiveObjects;
 
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 public class Course {
-    private short courseNum;
+    private Short courseNum;
     private String courseName;
     private List<Short> kdamCoursesList;
     private int numOfMaxStudents;
@@ -72,14 +73,30 @@ public class Course {
         if (!registeredStudents.contains(user) & numOfRegisteredStudents<numOfMaxStudents){
             registeredStudents.add(user);
             numOfRegisteredStudents++;
+            user.addCourseToList(courseNum);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean unregisterUser(User user){
+        if (registeredStudents.contains(user)){
+            registeredStudents.remove(user);
+            numOfRegisteredStudents--;
+            user.removeCourseFromList(courseNum);
             return true;
         }
         return false;
     }
 
     public String toString(){
-        return ("\n"+ "\n" +"Course name: "+ courseName + "\n" + "Course number: " + courseNum + "\n" + "Kdam courses: "
-                + kdamCoursesList.toString() + "\n" +"Number of max students: " + numOfMaxStudents
-                + "\n" + "Number of registered students: " +numOfRegisteredStudents+ "\n");
+        String[] strRegisteredStudents = new String[numOfRegisteredStudents];
+        int counter = 0;
+        for (User user : registeredStudents) {
+            strRegisteredStudents[counter++] = user.getUsername();
+        }
+        return ("Course: "+"("+courseNum+") "+courseName + "\n"
+                +"Seats Available: "+numOfRegisteredStudents+"/"+numOfMaxStudents + "\n"
+                +"Students Registered: "+ Arrays.toString(strRegisteredStudents));
     }
 }
