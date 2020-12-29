@@ -1,4 +1,4 @@
-package bgu.spl.net.PassiveObjects;
+package bgu.spl.net.impl.BGRSServer.PassiveObjects;
 
 public class Message {
     private final Short OP_CODE;

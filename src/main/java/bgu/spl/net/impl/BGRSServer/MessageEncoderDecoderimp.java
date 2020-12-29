@@ -1,6 +1,7 @@
-package bgu.spl.net.api;
+package bgu.spl.net.impl.BGRSServer;
 
-import bgu.spl.net.PassiveObjects.Message;
+import bgu.spl.net.api.MessageEncoderDecoder;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -9,7 +10,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message>{
+public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message> {
     private byte[] bytes = null; //start with 1k
     private int size = 0;
     private Short OP_CODE = null;

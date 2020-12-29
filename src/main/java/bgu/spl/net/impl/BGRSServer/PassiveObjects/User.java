@@ -1,4 +1,4 @@
-package bgu.spl.net.PassiveObjects;
+package bgu.spl.net.impl.BGRSServer.PassiveObjects;
 
 import java.util.LinkedList;
 import java.util.List;

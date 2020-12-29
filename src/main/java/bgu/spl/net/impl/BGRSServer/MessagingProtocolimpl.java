@@ -1,11 +1,12 @@
-package bgu.spl.net.api;
+package bgu.spl.net.impl.BGRSServer;
 
-import bgu.spl.net.PassiveObjects.Course;
-import bgu.spl.net.PassiveObjects.Message;
-import bgu.spl.net.PassiveObjects.User;
-import bgu.spl.net.srv.Database;
+import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.Course;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.User;
+import bgu.spl.net.impl.BGRSServer.Database;
 
-public class MessagingProtocolimpl implements MessagingProtocol<Message>{
+public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private boolean shouldTerminate=false;
     private final Short ADMINREG = 1;
     private final Short STUDENTREG = 2;

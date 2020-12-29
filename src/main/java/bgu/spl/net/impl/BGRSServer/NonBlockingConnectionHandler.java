@@ -1,7 +1,8 @@
-package bgu.spl.net.srv;
+package bgu.spl.net.impl.BGRSServer;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
+import bgu.spl.net.srv.ConnectionHandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

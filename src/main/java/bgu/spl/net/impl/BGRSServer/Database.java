@@ -1,9 +1,8 @@
-package bgu.spl.net.srv;
+package bgu.spl.net.impl.BGRSServer;
 
-import bgu.spl.net.PassiveObjects.Course;
-import bgu.spl.net.PassiveObjects.Message;
-import bgu.spl.net.PassiveObjects.User;
-import bgu.spl.net.api.MessagingProtocolimpl;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.Course;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
+import bgu.spl.net.impl.BGRSServer.PassiveObjects.User;
 
 import java.io.File;
 import java.io.IOException;
