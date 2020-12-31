@@ -85,6 +85,8 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message> 
                 }
             }
         }
+        if (message.getOP_CODE()==12)
+            bytes.write(0);
         return bytes.toByteArray();
     }
 
