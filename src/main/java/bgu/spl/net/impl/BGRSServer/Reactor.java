@@ -5,6 +5,7 @@ import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.srv.Server;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.nio.channels.ClosedSelectorException;
 import java.nio.channels.SelectionKey;
@@ -44,8 +45,9 @@ public class Reactor<T> implements Server<T> {
                 ServerSocketChannel serverSock = ServerSocketChannel.open()) {
 
             this.selector = selector; //just to be able to close
-
-            serverSock.bind(new InetSocketAddress(port));
+            InetSocketAddress so = new InetSocketAddress(port);
+            serverSock.bind(so);
+            System.out.println(InetAddress.getLocalHost());
             serverSock.configureBlocking(false);
             serverSock.register(selector, SelectionKey.OP_ACCEPT);
 			System.out.println("Server started");

@@ -53,7 +53,7 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message> 
                 lengthBuffer.clear();
             }
         } else {
-            if (nextByte == 0 | !(pattern.get(OP_CODE).second))
+            if (nextByte == '\0' | !(pattern.get(OP_CODE).second))
                 numOfZero--;
             if (numOfZero == 0 && pattern.get(OP_CODE).second)
                 return new Message(OP_CODE, new String(bytes, 0, size, StandardCharsets.UTF_8).split(" "));
@@ -86,7 +86,7 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message> 
             }
         }
         if (message.getOP_CODE()==12)
-            bytes.write(0);
+            bytes.write('\0');
         return bytes.toByteArray();
     }
 
