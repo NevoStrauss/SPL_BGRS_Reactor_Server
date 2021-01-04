@@ -1,8 +1,7 @@
-package bgu.spl.net.impl.BGRSServer;
+package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
-import bgu.spl.net.srv.ConnectionHandler;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -85,11 +84,13 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         while (!writeQueue.isEmpty()) {
             try {
                 ByteBuffer top = writeQueue.peek();
+                System.out.println("sending message");
                 chan.write(top);
                 if (top.hasRemaining()) {
                     return;
                 } else {
                     writeQueue.remove();
+                    System.out.println("finished sending message");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();

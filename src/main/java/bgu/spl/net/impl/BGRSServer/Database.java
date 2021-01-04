@@ -1,7 +1,6 @@
 package bgu.spl.net.impl.BGRSServer;
 
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.Course;
-import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.User;
 
 import java.io.File;
@@ -43,10 +42,11 @@ public class Database {
     boolean initialize(String coursesFilePath) {
         coursesList = new LinkedList<>();
         File courseFile = new File(coursesFilePath);
+        int courseSerialNumber = 0;
         try (Scanner myScanner = new Scanner(courseFile)){
             while(myScanner.hasNextLine()){
                 String currCourse = myScanner.nextLine();
-                coursesList.add(new Course(currCourse));
+                coursesList.add(new Course(currCourse, courseSerialNumber));
             }
         }catch (IOException e){
             e.printStackTrace();
@@ -138,9 +138,13 @@ public class Database {
     }
 
     public boolean checkKdam(User user, Course course){
-        List userCourses = user.getCourseList();
+        List<Course> userCourses = user.getCourseList();
+        List<Short> userCoursesNumbers = new LinkedList<>();
+        for (Course course1 : userCourses){
+            userCoursesNumbers.add(course1.getCourseNum());
+        }
         for (Short curr:course.getKdamCoursesList()) {
-            if (!userCourses.contains(curr))
+            if (!userCoursesNumbers.contains(curr))
                 return false;
         }
         return true;
@@ -174,21 +178,5 @@ public class Database {
         return false;   //no course with courseNumber or
         // not enough place in course or
         // dont have all the kdam courses.
-    }
-
-    public static void main(String[] args) {
-        Database db = getInstance();
-        Short srt = 200;
-        Short OP_CODE = 6;
-        User user = new User("nevo","nvst071093",false);
-        Message kdam = new Message(OP_CODE,srt);
-        String[] imashelahemzona = {user.getUsername(), user.getPassword()};
-        Message register = new Message((short) 2,imashelahemzona);
-        Message login = new Message((short) 3,imashelahemzona);
-        MessagingProtocolimpl mpi = new MessagingProtocolimpl();
-        mpi.process(register);
-        mpi.process(login);
-        Message response = mpi.process(kdam);
-        System.out.println(response);
     }
 }

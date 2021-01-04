@@ -1,4 +1,4 @@
-package bgu.spl.net.impl.BGRSServer;
+package bgu.spl.net.srv;
 
 import java.util.LinkedList;
 import java.util.Map;

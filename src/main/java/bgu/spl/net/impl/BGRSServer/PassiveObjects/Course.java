@@ -1,8 +1,6 @@
 package bgu.spl.net.impl.BGRSServer.PassiveObjects;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 public class Course {
     private Short courseNum;
@@ -10,17 +8,19 @@ public class Course {
     private List<Short> kdamCoursesList;
     private int numOfMaxStudents;
     private int numOfRegisteredStudents = 0;
+    private int serialNumber;
     private final List<User> registeredStudents = new LinkedList<>();
+    boolean sorted = false;
 
-    public Course(short _courseNum, String _courseName, List<Short> _KdamCoursesList, int _numOfMaxStudents){
+    public Course(short _courseNum, String _courseName, List<Short> _KdamCoursesList, int _numOfMaxStudents, int _serialNumber){
         courseNum = _courseNum;
         courseName = _courseName;
         kdamCoursesList = _KdamCoursesList;
         numOfMaxStudents = _numOfMaxStudents;
-
+        serialNumber = _serialNumber;
     }
 
-    public Course(String course){
+    public Course(String course, int _serialNumber){
         String[] courseData = course.split("\\|");
         courseNum = Short.parseShort(courseData[0]);
         courseName = courseData[1];
@@ -31,9 +31,10 @@ public class Course {
                 kdamCoursesList.add(Short.valueOf(s));
         }
         numOfMaxStudents = Integer.parseInt(courseData[3]);
+        serialNumber = _serialNumber;
     }
 
-    public int getCourseNum() {
+    public short getCourseNum() {
         return courseNum;
     }
 
@@ -73,9 +74,10 @@ public class Course {
         if (!registeredStudents.contains(user) & numOfRegisteredStudents<numOfMaxStudents){
             registeredStudents.add(user);
             numOfRegisteredStudents++;
-            user.addCourseToList(courseNum);
+            user.addCourseToList(this);
             return true;
         }
+        sorted=false;
         return false;
     }
 
@@ -83,7 +85,7 @@ public class Course {
         if (registeredStudents.contains(user)){
             registeredStudents.remove(user);
             numOfRegisteredStudents--;
-            user.removeCourseFromList(courseNum);
+            user.removeCourseFromList(this);
             return true;
         }
         return false;
@@ -97,6 +99,16 @@ public class Course {
         }
         return ("Course: "+"("+courseNum+") "+courseName + "\n"
                 +"Seats Available: "+numOfRegisteredStudents+"/"+numOfMaxStudents + "\n"
-                +"Students Registered: "+ Arrays.toString(strRegisteredStudents));
+                +"Students Registered: "+ Arrays.toString(getRegisteredStudentsByOrder().toArray()));
     }
+
+    public List<User> getRegisteredStudentsByOrder(){
+        if (!sorted) {
+            Comparator<User> cmp = Comparator.comparing(User::getUsername);
+            registeredStudents.sort(cmp);
+        }
+        return registeredStudents;
+    }
+
+    public int getSerialNumber(){return serialNumber;}
 }

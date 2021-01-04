@@ -1,5 +1,7 @@
 package bgu.spl.net.impl.BGRSServer.PassiveObjects;
 
+import java.util.Arrays;
+
 public class Message {
     private final Short OP_CODE;
     private final String[] properties;
@@ -39,4 +41,8 @@ public class Message {
     }
 
     public Short getAdditionalProps(){return additionalProps;}
+
+    public String toString(){
+        return OP_CODE + "\n" + Arrays.toString(properties) + "\n" + additionalProps;
+    }
 }

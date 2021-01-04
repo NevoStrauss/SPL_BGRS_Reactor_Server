@@ -1,8 +1,7 @@
-package bgu.spl.net.impl.BGRSServer;
+package bgu.spl.net.srv;
 
 import bgu.spl.net.api.MessageEncoderDecoder;
 import bgu.spl.net.api.MessagingProtocol;
-import bgu.spl.net.srv.Server;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -55,6 +54,7 @@ public class Reactor<T> implements Server<T> {
             while (!Thread.currentThread().isInterrupted()) {
 
                 selector.select();
+                System.out.println("Client conncected");
                 runSelectionThreadTasks();
 
                 for (SelectionKey key : selector.selectedKeys()) {

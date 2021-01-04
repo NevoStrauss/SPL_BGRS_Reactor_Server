@@ -22,49 +22,85 @@ public class MessageEncoderDecoderimp implements MessageEncoderDecoder<Message> 
         pattern = new HashMap<>();
         for (short i=1;i<=11;i++){
             if (i<4){
-                pattern.put(i,new Pair(2,true));
+                pattern.put(i,new Pair<>(2,true));
             }
             else if(i==4 | i==11){
-                pattern.put(i,new Pair(0,false));
+                pattern.put(i,new Pair<>(0,false));
             }
             else if(i==8){
-                pattern.put(i,new Pair(1,true));
+                pattern.put(i,new Pair<>(1,true));
             }
             else
                 pattern.put(i,new Pair<>(2,false));
         }
     }
 
-    @Override
-    public Message decodeNextByte(byte nextByte) {
-        if (bytes == null) { //indicates that we are still reading the length
-            lengthBuffer.put(nextByte);
-            if (!lengthBuffer.hasRemaining()) { //we read 2 bytes and therefore can take the length
-                lengthBuffer.flip();
-                OP_CODE = lengthBuffer.getShort();
-                if (OP_CODE == 4 | OP_CODE == 11)
-                    return new Message(OP_CODE);
-                boolean what = pattern.get(OP_CODE).second;
-                if (!what) {
-                    bytes = new byte[2];
-                } else
-                    bytes = new byte[1 << 10]; //starts with 1024
-                numOfZero = pattern.get(OP_CODE).first;
+    private Message continueDecodeOP(byte nextByte){
+        lengthBuffer.put(nextByte);
+        if (!lengthBuffer.hasRemaining()) { //we read 2 bytes and therefore can take the length
+            lengthBuffer.flip();
+            OP_CODE = lengthBuffer.getShort();
+            if (OP_CODE == 4 | OP_CODE == 11) {
                 lengthBuffer.clear();
+                return new Message(OP_CODE);
             }
-        } else {
-            if (nextByte == '\0' | !(pattern.get(OP_CODE).second))
-                numOfZero--;
-            if (numOfZero == 0 && pattern.get(OP_CODE).second)
-                return new Message(OP_CODE, new String(bytes, 0, size, StandardCharsets.UTF_8).split(" "));
-            else if(numOfZero ==0)
-                return new Message(OP_CODE, bytesToShort(bytes));
-            bytes[size] = nextByte;
-            size++;
-            if (size==bytes.length)
-                bytes = Arrays.copyOf(bytes, size * 2);
+            boolean what = pattern.get(OP_CODE).second;
+            if (!what)
+                bytes = new byte[2];
+            else
+                bytes = new byte[1 << 10]; //starts with 1024
+            numOfZero = pattern.get(OP_CODE).first;
+            lengthBuffer.clear();
         }
         return null;
+    }
+
+    private Message continueDecodeMsg(byte nextByte) {
+        if (pattern.get(OP_CODE).second)
+            return decodeStringMsg(nextByte);
+        else
+            return decodeShortMsg(nextByte);
+    }
+
+    private Message decodeStringMsg(byte nextByte){
+        if (nextByte == '\0')
+            numOfZero--;
+        if (numOfZero == 0) {        //op codes 1-3, 8
+            Message output = new Message(OP_CODE,new String(bytes,0,size,StandardCharsets.UTF_8).split(" "));
+            //reset bytes and size
+            this.bytes = null;
+            this.size=0;
+            return output;
+        }
+        if (nextByte == '\0' & numOfZero == 1)
+            bytes[size] = " ".getBytes(StandardCharsets.UTF_8)[0];
+        else
+            bytes[size] = nextByte;
+        size++;
+        if (size==bytes.length)
+            bytes = Arrays.copyOf(bytes, size * 2);
+        return null;
+    }
+
+    private Message decodeShortMsg(byte nextByte){
+        bytes[size] = nextByte;
+        size++;
+        numOfZero--;
+        if(numOfZero == 0) {    //op codes 5-7,9-10
+            Message output = new Message(OP_CODE,bytesToShort(bytes));
+            this.bytes = null;
+            this.size=0;
+            return output;
+        }
+        return null;
+    }
+
+    @Override
+    public Message decodeNextByte(byte nextByte) {
+        if (bytes == null)  //indicates that we are still reading the length
+            return continueDecodeOP(nextByte);
+        else
+            return continueDecodeMsg(nextByte);
     }
 
     @Override

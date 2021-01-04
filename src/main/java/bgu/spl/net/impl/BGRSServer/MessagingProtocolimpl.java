@@ -4,7 +4,9 @@ import bgu.spl.net.api.MessagingProtocol;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.Course;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.User;
-import bgu.spl.net.impl.BGRSServer.Database;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private boolean shouldTerminate=false;
@@ -27,32 +29,32 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     @Override
     public Message process(Message msg) {
         Short OP_CODE = msg.getOP_CODE();
-        if ((user==null || !database.isLoggedIn(user.getUsername())) & OP_CODE>3)
+        if (((user==null || !database.isLoggedIn(user.getUsername())) & OP_CODE>3))
             return new Message(ERROR,OP_CODE);
         Message output = null;
         switch (OP_CODE){
             case 1: output = admingReg(msg.getProperties());
-            break;
+                break;
             case 2: output = studentReg(msg.getProperties());
-            break;
+                break;
             case 3: output = login(msg.getProperties());
-            break;
+                break;
             case 4: output = logout();
-            break;
+                break;
             case 5: output = courseReg(msg.getAdditionalProps());
-            break;
+                break;
             case 6: output = kdamCheck(msg.getAdditionalProps());
-            break;
+                break;
             case 7: output = courseStatus(msg.getAdditionalProps());
-            break;
+                break;
             case 8: output = studentStatus(msg.getProperties());
-            break;
+                break;
             case 9: output = isRegistered(msg.getAdditionalProps());
-            break;
+                break;
             case 10: output = unregister(msg.getAdditionalProps());
-            break;
+                break;
             case 11: output = myCourses();
-            break;
+                break;
         }
         return output;
     }
@@ -84,8 +86,8 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
             return new Message(ERROR,LOGIN);    // not enough arguments, or not registered, or password doesnt match or already logged in
         if (user==null)
             user = database.getUserByName(props[0]);
-       database.login(user);
-       return new Message(ACK,LOGIN);
+        database.login(user);
+        return new Message(ACK,LOGIN);
     }
 
     private Message logout(){
@@ -95,14 +97,21 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     }
 
     private Message courseReg(Short courseNumber){
-        if (!user.isAdmin() && database.registerToCourse(user, courseNumber))
+        boolean success = database.registerToCourse(user, courseNumber);
+        if (!user.isAdmin() && success)
             return new Message(ACK, COURSEREG);
         return new Message(ERROR,COURSEREG);
     }
 
     private Message kdamCheck(Short courseNumer){
         Course courseData = database.getCoursByNum(courseNumer);
-        String[] data = {courseData.getKdamCoursesList().toString()};
+        String kdam = courseData.getKdamCoursesList().toString();
+        String[] dta = kdam.split(" ");
+        kdam = "";
+        for (int i=0;i<dta.length;i++){
+            kdam += dta[i];
+        }
+        String[] data = {kdam};
         return new Message(ACK,data,KDAMCHECK);
     }
 
@@ -118,7 +127,9 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private Message studentStatus(String[] props){
         if (!user.isAdmin() | props.length<1)
             return new Message(ERROR,STUDENTSTAT);
-        String[] data = {props[0],user.getCourseList().toString()};
+        User user = database.getUserByName(props[0]);
+        String output = "Student: " + props[0] + "\n" + "Courses: " + getCoursesNumbersByOrder(user);
+        String[] data = {output};
         return new Message(ACK,data,STUDENTSTAT);
     }
 
@@ -143,7 +154,18 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private Message myCourses(){
         if (user.isAdmin())
             return new Message(ERROR,MYCOURSES);
-        String[] data = {user.getCourseList().toString()};
+        String[] data = {getCoursesNumbersByOrder(user)};
         return new Message(ACK,data,MYCOURSES);
+    }
+
+    private String getCoursesNumbersByOrder(User user) {
+        List<Course> courses = user.getRegisteredCoursesByOrder();
+        short[] coursesNumbers = new short[courses.size()];
+        int counter = 0;
+        for (Course course : courses){
+            coursesNumbers[counter] = course.getCourseNum();
+            counter++;
+        }
+        return Arrays.toString(coursesNumbers);
     }
 }
