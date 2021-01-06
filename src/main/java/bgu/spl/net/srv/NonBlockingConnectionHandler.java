@@ -84,13 +84,11 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
         while (!writeQueue.isEmpty()) {
             try {
                 ByteBuffer top = writeQueue.peek();
-                System.out.println("sending message");
                 chan.write(top);
                 if (top.hasRemaining()) {
                     return;
                 } else {
                     writeQueue.remove();
-                    System.out.println("finished sending message");
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();

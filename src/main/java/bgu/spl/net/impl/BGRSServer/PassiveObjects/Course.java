@@ -8,9 +8,9 @@ public class Course {
     private List<Short> kdamCoursesList;
     private int numOfMaxStudents;
     private int numOfRegisteredStudents = 0;
-    private int serialNumber;
+    private final int serialNumber;
     private final List<User> registeredStudents = new LinkedList<>();
-    boolean sorted = false;
+    private boolean sorted = false;
 
     public Course(short _courseNum, String _courseName, List<Short> _KdamCoursesList, int _numOfMaxStudents, int _serialNumber){
         courseNum = _courseNum;
@@ -36,6 +36,10 @@ public class Course {
 
     public short getCourseNum() {
         return courseNum;
+    }
+
+    public int getNumOfRegisteredStudents(){
+        return numOfRegisteredStudents;
     }
 
     public String getCourseName() {
@@ -98,8 +102,8 @@ public class Course {
             strRegisteredStudents[counter++] = user.getUsername();
         }
         return ("Course: "+"("+courseNum+") "+courseName + "\n"
-                +"Seats Available: "+numOfRegisteredStudents+"/"+numOfMaxStudents + "\n"
-                +"Students Registered: "+ Arrays.toString(getRegisteredStudentsByOrder().toArray()));
+                +"Seats Available: "+(numOfMaxStudents-numOfRegisteredStudents)+"/"+numOfMaxStudents + "\n"
+                +"Students Registered: "+ getRegisteredStudentsByOrder().toString().replace(", ",","));
     }
 
     public List<User> getRegisteredStudentsByOrder(){

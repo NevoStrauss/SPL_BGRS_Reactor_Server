@@ -46,15 +46,12 @@ public class Reactor<T> implements Server<T> {
             this.selector = selector; //just to be able to close
             InetSocketAddress so = new InetSocketAddress(port);
             serverSock.bind(so);
-            System.out.println(InetAddress.getLocalHost());
             serverSock.configureBlocking(false);
             serverSock.register(selector, SelectionKey.OP_ACCEPT);
-			System.out.println("Server started");
 
             while (!Thread.currentThread().isInterrupted()) {
 
                 selector.select();
-                System.out.println("Client conncected");
                 runSelectionThreadTasks();
 
                 for (SelectionKey key : selector.selectedKeys()) {

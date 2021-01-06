@@ -5,8 +5,7 @@ import bgu.spl.net.impl.BGRSServer.PassiveObjects.Course;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.Message;
 import bgu.spl.net.impl.BGRSServer.PassiveObjects.User;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private boolean shouldTerminate=false;
@@ -65,12 +64,13 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     }
 
     private Message register(String[] props,Short COMMAND,boolean authorization){
-        if (props.length<2 | database.isRegistered(props[0]))
+        if (this.user != null |props.length<2 || database.isRegistered(props[0]))
             return new Message(ERROR,COMMAND);     //not enough arguments or already registered
-        if (user == null)
-            user = new User(props[0],props[1],authorization);
-        database.register(user);
-        return new Message(ACK, COMMAND);      //succeeded
+        User user = new User(props[0],props[1],authorization);
+        if (database.register(user))
+            return new Message(ACK, COMMAND);      //succeeded
+        else
+            return new Message(ERROR,COMMAND);     //not enough arguments or already registered
     }
 
     private Message admingReg(String[] props){
@@ -97,22 +97,33 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     }
 
     private Message courseReg(Short courseNumber){
-        boolean success = database.registerToCourse(user, courseNumber);
-        if (!user.isAdmin() && success)
+        if (!user.isAdmin() && database.registerToCourse(user, courseNumber))
             return new Message(ACK, COURSEREG);
         return new Message(ERROR,COURSEREG);
     }
 
-    private Message kdamCheck(Short courseNumer){
-        Course courseData = database.getCoursByNum(courseNumer);
-        String kdam = courseData.getKdamCoursesList().toString();
-        String[] dta = kdam.split(" ");
-        kdam = "";
-        for (int i=0;i<dta.length;i++){
-            kdam += dta[i];
+    private Message kdamCheck(Short courseNumber){
+        List<Course> kdamCourses = getKdamCoursesByOrder(courseNumber);
+        String[] data = new String[kdamCourses.size()];
+        int i = 0;
+        for (Course curr : kdamCourses){
+            data[i] = Short.toString(curr.getCourseNum());
+            i++;
         }
-        String[] data = {kdam};
-        return new Message(ACK,data,KDAMCHECK);
+        String[] output = {Arrays.toString(data).replace(", ",",")};
+        return new Message(ACK,output,KDAMCHECK);
+    }
+
+    private List<Course> getKdamCoursesByOrder(short courseNumber){
+        Course courseData = database.getCoursByNum(courseNumber);
+        List<Short> kdamCourseNumbers = courseData.getKdamCoursesList();
+        List<Course> kdamCourses = new LinkedList<>();
+        for (Short shrt : kdamCourseNumbers){
+            kdamCourses.add(database.getCoursByNum(shrt));
+        }
+        Comparator<Course> cmp = Comparator.comparingInt(Course::getSerialNumber);
+        kdamCourses.sort(cmp);
+        return kdamCourses;
     }
 
     private Message courseStatus(Short courseNumber){
@@ -128,7 +139,7 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
         if (!user.isAdmin() | props.length<1)
             return new Message(ERROR,STUDENTSTAT);
         User user = database.getUserByName(props[0]);
-        String output = "Student: " + props[0] + "\n" + "Courses: " + getCoursesNumbersByOrder(user);
+        String output = "Student: " + props[0] + "\n" + "Courses: " + getCoursesNumbersByOrder(user).replace(", ",",");
         String[] data = {output};
         return new Message(ACK,data,STUDENTSTAT);
     }
@@ -154,7 +165,7 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private Message myCourses(){
         if (user.isAdmin())
             return new Message(ERROR,MYCOURSES);
-        String[] data = {getCoursesNumbersByOrder(user)};
+        String[] data = {getCoursesNumbersByOrder(user).replace(", ",",")};
         return new Message(ACK,data,MYCOURSES);
     }
 

@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Passive object representing the Database where all courses and users are stored.
@@ -19,9 +21,9 @@ import java.util.Scanner;
  */
 public class Database {
     private static class singleton{private static final Database singleton = new Database();}
-    private List<Course> coursesList;
-    private List<User> registeredUserList;
-    private List<User> loggedInUserList;
+    private ConcurrentHashMap<String, User> registeredUserMap;
+    private ConcurrentHashMap<String,User> loggedInUserMap;
+    private ConcurrentHashMap<Short, Course> coursesMap;
 
     //to prevent user from creating new Database
     private Database() {
@@ -40,101 +42,76 @@ public class Database {
      * into the Database, returns true if successful.
      */
     boolean initialize(String coursesFilePath) {
-        coursesList = new LinkedList<>();
+        coursesMap = new ConcurrentHashMap<>();
         File courseFile = new File(coursesFilePath);
         int courseSerialNumber = 0;
         try (Scanner myScanner = new Scanner(courseFile)){
             while(myScanner.hasNextLine()){
                 String currCourse = myScanner.nextLine();
-                coursesList.add(new Course(currCourse, courseSerialNumber));
+                Course curr = new Course(currCourse, courseSerialNumber);
+                coursesMap.putIfAbsent(curr.getCourseNum(),curr);
+                courseSerialNumber++;
             }
         }catch (IOException e){
             e.printStackTrace();
             return false;
         }
-        registeredUserList = new LinkedList<>();
-        loggedInUserList = new LinkedList<>();
+        registeredUserMap = new ConcurrentHashMap<>();
+        loggedInUserMap = new ConcurrentHashMap<>();
         return true;
     }
 
     public boolean isRegistered(User user){
-        for (User curr: registeredUserList) {
-            if (curr.equals(user))
-                return true;
-        }
-        return false;
+        return registeredUserMap.containsKey(user.getUsername());
     }
 
     public boolean checkMatch(String user, String password){
-        for (User curr: registeredUserList) {
-            if (curr.getUsername().equals(user) && curr.getPassword().equals(password))
-                return true;
-        }
-        return false;
+        String toCompare = registeredUserMap.get(user).getPassword();
+        return toCompare.equals(password);
     }
 
     public boolean isRegistered(String username){
-        for (User curr: registeredUserList) {
-            if (curr.getUsername().equals(username))
-                return true;
-        }
-        return false;
+        return registeredUserMap.containsKey(username);
+
     }
 
     public boolean isLoggedIn(String username){
-        for (User curr: loggedInUserList) {
-            if (curr.getUsername().equals(username))
-                return true;
-        }
-        return false;
+        return loggedInUserMap.containsKey(username);
     }
 
-    public void register(User user){
-        registeredUserList.add(user);
+    public boolean register(User user){
+        User user1 = registeredUserMap.putIfAbsent(user.getUsername(),user);
+        return user1 == null;
     }
 
     public User getUserByName(String username){
-        for (User user:registeredUserList) {
-            if (user.getUsername().equals(username))
-                return user;
-        }
-        return null;
+        return registeredUserMap.get(username);
     }
 
     public void login(User user){
-        loggedInUserList.add(user);
+        loggedInUserMap.putIfAbsent(user.getUsername(),user);
     }
 
     public void logout(User user){
-        loggedInUserList.remove(user);
+        loggedInUserMap.remove(user.getUsername());
     }
 
     public boolean isCourseExist(Short courseNumber){
-        for (Course course:coursesList){
-            if (course.getCourseNum() == courseNumber){
-                return true;
-            }
-        }
-        return false;
+        return coursesMap.containsKey(courseNumber);
     }
 
     public boolean isCourseAvailable(Short courseNumber){
-        for (Course course:coursesList){
-            if (course.getCourseNum() == courseNumber) {
-                synchronized (course) {
-                    return (course.getNumOfMaxStudents() > course.getRegisteredStudents().size());
-                }
+        Course curr = coursesMap.get(courseNumber);
+        if (curr!=null){
+            synchronized (curr) {
+                return (curr.getNumOfMaxStudents() - curr.getNumOfRegisteredStudents() > 0);
             }
         }
         return false;
     }
 
     public Course getCoursByNum(Short courseNumber){
-        for (Course course:coursesList){
-            if (course.getCourseNum() == courseNumber)
-                return course;
-        }
-        return null;
+        return coursesMap.get(courseNumber);
     }
 
     public boolean checkKdam(User user, Course course){
@@ -152,31 +129,28 @@ public class Database {
 
 
     public boolean registerToCourse(User user, Short courseNumber){
-        for (Course course:coursesList){
-            if (course.getCourseNum() == courseNumber) {
-                if (checkKdam(user,course) & course.getNumOfMaxStudents() > course.getRegisteredStudents().size()) {
-                    synchronized (course) {
-                        if (course.getNumOfMaxStudents() > course.getRegisteredStudents().size())
-                            return course.registerUser(user);
-                    }
-                }
+        Course curr = coursesMap.get(courseNumber);
+        if (curr==null || !checkKdam(user,curr) || curr.getNumOfMaxStudents() == curr.getNumOfRegisteredStudents())
+            return false;
+        else{
+            synchronized (curr){
+                if (curr.getNumOfMaxStudents() > curr.getNumOfRegisteredStudents())
+                    return curr.registerUser(user);
             }
         }
         return false;   //no course with courseNumber or
-        // not enough place in course or
-        // dont have all the kdam courses.
+                        // not enough place in course or
+                        // dont have all the kdam courses.
     }
 
     public boolean unregisterFromCourse(User user, Short courseNumber){
-        for (Course course:coursesList){
-            if (course.getCourseNum() == courseNumber) {
-                synchronized (course) {
-                    return course.unregisterUser(user);
-                }
+        Course curr = coursesMap.get(courseNumber);
+        if (curr!=null) {
+            synchronized (curr) {
+                return curr.unregisterUser(user);
             }
         }
         return false;   //no course with courseNumber or
-        // not enough place in course or
-        // dont have all the kdam courses.
+                        //user wasn't registered to the course
     }
 }
