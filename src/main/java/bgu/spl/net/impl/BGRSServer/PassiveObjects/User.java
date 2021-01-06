@@ -34,10 +34,6 @@ public class User {
         return authorization;
     }
 
-    public boolean equals(User user){
-        return (username.equals(user.username) & password.equals(user.password) & authorization == user.authorization);
-    }
-
     public void addCourseToList(Course course){
         registeredCourses.add(course);
         sorted = false;

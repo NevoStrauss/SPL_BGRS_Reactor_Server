@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * Passive object representing the Database where all courses and users are stored.
@@ -61,10 +60,6 @@ public class Database {
         return true;
     }
 
-    public boolean isRegistered(User user){
-        return registeredUserMap.containsKey(user.getUsername());
-    }
-
     public boolean checkMatch(String user, String password){
         String toCompare = registeredUserMap.get(user).getPassword();
         return toCompare.equals(password);
@@ -94,20 +89,6 @@ public class Database {
 
     public void logout(User user){
         loggedInUserMap.remove(user.getUsername());
-    }
-
-    public boolean isCourseExist(Short courseNumber){
-        return coursesMap.containsKey(courseNumber);
-    }
-
-    public boolean isCourseAvailable(Short courseNumber){
-        Course curr = coursesMap.get(courseNumber);
-        if (curr!=null){
-            synchronized (curr) {
-                return (curr.getNumOfMaxStudents() - curr.getNumOfRegisteredStudents() > 0);
-            }
-        }
-        return false;
     }
 
     public Course getCoursByNum(Short courseNumber){
