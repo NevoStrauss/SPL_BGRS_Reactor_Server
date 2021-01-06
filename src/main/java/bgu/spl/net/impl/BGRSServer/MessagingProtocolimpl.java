@@ -25,9 +25,15 @@ public class MessagingProtocolimpl implements MessagingProtocol<Message> {
     private final Database database = Database.getInstance();
     private User user=null;
 
+    /**
+     * checks which opcode was received and execute according to it
+     * @param msg the received message
+     * @return response to the message
+     */
     @Override
     public Message process(Message msg) {
         Short OP_CODE = msg.getOP_CODE();
+        //(hasn't logged in or not loged in) and it isn't ADMINREG, STUDENTREG or LOGIN OP_CODES
         if (((user==null || !database.isLoggedIn(user.getUsername())) & OP_CODE>3))
             return new Message(ERROR,OP_CODE);
         Message output = null;
